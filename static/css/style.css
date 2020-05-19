@@ -1,0 +1,132 @@
+/* BODY STYLE*/
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  margin: 0px;
+}
+
+.container {
+  width: 100%;
+  margin-left: 170px;
+  /* padding: 0px 20px 20px 0px; */
+}
+
+/* MAIN BODY STYLE */
+main {
+  padding: 80px 20px 20px 20px;
+  overflow: hidden;
+}
+
+#mainWrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 4fr 1fr;
+  gap: 1rem;
+}
+
+#chatWrapper {
+  background-color: lightgreen;
+}
+
+#chatTypeWrapper {
+  background-color: lightpink;
+}
+
+
+
+
+/* NAVBAR STYLE*/
+
+nav {
+  display: flex;
+  flex-wrap: nowrap;
+  background-color: lightgray;
+  height: 60px;
+  width: 100%;
+  z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+#nav-logo-wrapper {
+  width: 120px;
+  margin: 7px 20px 7px 30px;
+}
+
+#nav-logo {
+  height: 46px;
+}
+
+#nav-left-side {
+  display: flex;
+  justify-content: space-between;
+  width: 110px;
+  align-items: center;
+}
+
+#nav-right-side {
+  display: flex;
+  justify-content: flex-end;
+  flex-grow: 8;
+  align-items: center;
+  padding-right: 20px;
+}
+
+nav a {
+  text-decoration: none;
+  text-transform: uppercase;
+  color: #4c4e52;
+}
+
+nav a:hover {
+  color:#262729;
+}
+
+/* SIDEBAR */
+
+#aside {
+  border-right: 1px solid lightgray;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  padding: 80px 15px 15px 15px; /* Top = Height of navbar +20 */
+  z-index: 100; /* Behind the Navbar */
+  width: 170px;
+  height: 100%;
+}
+
+aside ul {
+  list-style-type: none;
+}
+
+aside a {
+  display: block;
+  text-decoration: none;
+  padding: 0px 10px;
+}
+
+aside h5 {
+  margin-top: 5px;
+}
+
+#aside-user-section {
+  border-bottom: 1px solid lightgray;
+}
+
+#channelWrapper {
+  width: 100%;
+}
+
+#channelAddWrapper {
+  width: 100%;
+}
+
+form input {
+  margin-bottom: 0.5em;
+}
+
+#channelFormText {
+  width: 97%;
+}
+

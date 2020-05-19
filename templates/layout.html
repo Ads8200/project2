@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        
+        <!-- BOOTSTRAP CSS 
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+            -->
+    
+        <!-- MY CSS -->
+        <link rel="stylesheet" href="../static/css/style1.css">
+
+        <!-- AJAX JS LIB -->
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+            
+        <!-- MY JAVASCRIPT -->
+        <script src="../static/js/smack.js"></script>
+
+        <title>
+            Smack: {% block title %}{% endblock %}
+        </title>
+    </head>
+    <body>
+        <div class="gridContainer">
+            <header id="header">
+                <div id="logoWrapper">
+                    <a href="#">
+                        <img id="headerLogo" src="../static/images/smack_logo.png" alt="logo">
+                    </a>
+                </div>
+                <div id="signoutWrapper">
+                    <a id='signout' href='/'>Sign out</a>
+                </div>
+            </header>
+            <aside id="sidebar">
+                <div id="aside-menu-items">
+                    <div id="sidebarUserWrapper">
+                        <p><span id="username"></span></p>
+                    </div>
+                    <div id="sidebarChannelWrapper">
+                        <div id="channelAddWrapper">
+                            <p>Add channel:</p>
+                            <form id="channelForm">
+                                <input id="channelFormText" type="text" placeholder="channel name" autocomplete="off" autofocus>
+                                <input id="channelFormButton" type="submit" value="Add">
+                            </form>
+                            <p><span id="channelMessage"></span></p>
+                        </div>
+                        <div id="channelListWrapper">
+                            <p>Channels:</p>
+                            <select id='channels'></select>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <main id="main">
+                <div id="mainContainer">
+                    <div id="chatWrapper">
+
+                    </div>
+                    <div id="chatInputWrapper">
+                        <form id="chatbox">
+                            <textarea id="chatTextArea" form="#chatbox" rows="4" cols="60"></textarea><br>
+                            <input id="chatButton" type="submit" value="Send">
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,100 @@
+/* BODY STYLE*/
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  margin: 0px;
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  grid-template-rows: 80px minmax(200px, 1fr);
+  gap: 1rem;
+  grid-template-areas: 
+      'header header'
+      'sidebar main';
+}
+
+#header {
+  grid-area: header;
+  background-color: lightpink;
+  text-decoration: none;
+
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  grid-template-areas: 
+    'logo signout';
+  align-content: center;
+}
+
+#sidebar {
+  grid-area: sidebar;
+  background-color: lightskyblue;
+  align-items: center;
+  padding: 0.8em;
+}
+
+#main {
+  grid-area: main;
+  /*
+  grid-column-start: 2;
+  grid-column-end: 3;
+  grid-row-start: 2;
+  grid-row-end: 3;
+  */
+}
+
+#mainContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 4fr 1fr;
+  gap: 1rem;
+  grid-template-areas: 
+    'chat'
+    'chatInput';
+}
+
+#chatWrapper {
+  grid-area: chat;
+}
+
+#chatInputWrapper {
+  grid-area: chatInput;
+}
+
+#logoWrapper {
+  grid-area: logo;
+  height: 70px;
+}
+
+#headerLogo {
+  height: 100%;
+}
+
+#signoutWrapper {
+  grid-area: signout;
+  text-decoration: none;
+}
+
+#channelAddWrapper {
+  height: 100px;
+}
+
+#sidebarUserWrapper {
+  height: 30px;
+}
+
+.myMessage {
+  background-color: mediumaquamarine;
+  width: 400px;
+  border-radius: 1em;
+  padding: 0.5em 1em;
+}
+
+.otherMessage {
+  background-color: pink;
+  width: 400px;
+  margin-left: 200px;
+  border-radius: 1em;
+  padding: 0.5em 1em;
+}
