@@ -112,6 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#chatWrapper').append(p);
     });
 
+    document.querySelector('#channels').onchange = () => {
+        channelChange();
+    }
+
+
     document.querySelector('#signout').onclick = () => {
         signout();
     };
@@ -178,6 +183,61 @@ function updateChannels() {
 
     // Send request
     request.send();
+
+    // Stop page reloading
+    return false;
+};
+
+
+function channelChange() {
+    // Get channel name
+    channel = document.querySelector('#channels').value;
+
+    // Clear chat window
+    document.querySelector('#chatWrapper').innerHTML = '';
+
+    // Contact server and get latest chat data
+    const request = new XMLHttpRequest();
+    request.open('POST', '/dataUpdate');
+    
+    // Callback function for when request completes
+    request.onload = () => {
+        
+        // Extract JSON data from request
+        const data = JSON.parse(request.responseText);
+
+        if (data.success) {
+
+            chatHistory = data.chatHistory;
+            console.log(chatHistory);
+
+            //for (message in chatHistory) {
+            for(var i = 0 ; i < chatHistory.length ; i++) {
+                //console.log(message.chat);
+                var p = document.createElement('p');
+                if (chatHistory[i].username == username) {
+                    p.innerHTML = chatHistory[i].chat;
+                    p.className = 'myMessage';
+                }
+                else {
+                    p.innerHTML = `[${chatHistory[i].username}] ${chatHistory[i].chat}`;
+                    p.className = 'otherMessage';
+                }
+                document.querySelector('#chatWrapper').append(p);
+            }
+        }
+        else {
+            // Update HTML with failure message
+            document.querySelector('#chatWrapper').innerHTML = data.message;
+        }
+    };
+
+    // Add data to send with request
+    const data = new FormData();
+    data.append('channel', channel);
+
+    // Send request
+    request.send(data);
 
     // Stop page reloading
     return false;

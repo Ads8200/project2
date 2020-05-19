@@ -34,6 +34,15 @@ def updateChannels():
         return jsonify({'success': False, 'message': 'No active channels'})
 
 
+@app.route("/dataUpdate", methods=["POST"])
+def dataUpdate():
+    channel = request.form.get("channel")
+    if channel in channels.keys():
+        return jsonify({'success': True, 'message': 'success', 'chatHistory': channels[channel]})
+    else:
+        return jsonify({'success': False, 'message': 'Error obtaining chat history'})
+
+
 @socketio.on("submit chat")
 def chat(data):
     chat = data["chat"]
