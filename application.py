@@ -1,5 +1,6 @@
 import os
 import json
+import datetime
 
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
@@ -19,21 +20,27 @@ def index():
 
 @app.route("/updateChannels", methods=["POST"])
 def updateChannels():
-    newChannel = request.form.get("newChannel")
+    if len(channels) > 0:
+        return jsonify({'success': True, 'message': 'success', 'channels': channels})
+    else:
+        return jsonify({'success': False, 'message': 'No active channels'})
 
-    if newChannel == None or newChannel == 'null':
-        if len(channels) > 0:
-            return jsonify({'success': True, 'channelAdded': False, 'message': 'success', 'channels': channels})
-        else:
-            return jsonify({'success': False, 'channelAdded': False, 'message': 'No active channels'})
-    else:   
-        # If new channel exists, return existing list of channels and error message
-        if newChannel in channels.keys():
-            return jsonify({'success': True, 'channelAdded': False, 'message': 'Channel already exists', 'channels': channels})
-        else:
-            # Initialise a new list item for new channel
-            channels[newChannel] = []
-            return jsonify({'success': True, 'channelAdded': True, 'message': 'success', 'channels': channels})
+#    
+#    newChannel = request.form.get("newChannel")
+#
+#    if newChannel == None or newChannel == 'null':
+#        if len(channels) > 0:
+#            return jsonify({'success': True, 'channelAdded': False, 'message': 'success', 'channels': channels})
+#        else:
+#            return jsonify({'success': False, 'channelAdded': False, 'message': 'No active channels'})
+#    else:   
+#        # If new channel exists, return existing list of channels and error message
+#        if newChannel in channels.keys():
+#            return jsonify({'success': True, 'channelAdded': False, 'message': 'Channel already exists', 'channels': channels})
+#        else:
+#            # Initialise a new list item for new channel
+#            channels[newChannel] = []
+#            return jsonify({'success': True, 'channelAdded': True, 'message': 'success', 'channels': channels})
 
 
 @app.route("/dataUpdate", methods=["POST"])
@@ -50,15 +57,25 @@ def chat(data):
     chat = data["chat"]
     username = data['username']
     channel = data['activeChannel']
+    dt = datetime.datetime.fromtimestamp(data['timestamp']/1000)
 
     # Update dictionary
-    channels[channel].append({'username':username, 'chat':chat})
+    channels[channel].append({'username':username, 'chat':chat, 'timestamp': dt})
     if len(channels[channel]) > 100:
         channels[channel].pop(0)
 
-    emit("announce chat", {"chat": chat, "username": data["username"], "activeChannel": data["activeChannel"]}, broadcast=True)
+    emit("announce chat", {"chat": chat, "username": data["username"], "activeChannel": data["activeChannel"], "timestamp": dt.strftime("%d-%b (%H:%M:%S)")}, broadcast=True)
+
 
 @socketio.on("submit new channel")
 def submitNewChannel(data):
     newChannel = data['newChannel']
-    emit("announce channel", {"newChannel": newChannel}, broadcast=True)
+
+    if newChannel == None or newChannel == 'null':
+        emit("announce channel", {"newChannel": newChannel, "success": False, "message": 'Channel name cannot be null'}, broadcast=True)
+    elif newChannel in channels.keys():
+        emit("announce channel", {"newChannel": newChannel, "success": False, "message": 'Channel already exists'}, broadcast=True)
+    else:
+        # Initialise a new list item for new channel
+        channels[newChannel] = []
+        emit("announce channel", {"newChannel": newChannel, "success": True, "message": 'Channel added'}, broadcast=True)

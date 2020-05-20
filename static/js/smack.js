@@ -7,16 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (newUser()) {
         username = getUsername();
         localStorage.setItem('username', username);
+        document.querySelector('#username').innerHTML = `Hello, <b>${username}</b>!`;
+        updateChannels();
     }
     else {
         username = localStorage.getItem('username');
+        document.querySelector('#username').innerHTML = `Hello, <b>${username}</b>!`;
+        if (!localStorage.getItem('activeChannel') || localStorage.getItem('activeChannel') == 'Select channel...'){
+            console.log('No active channel in local storage');
+            updateChannels();
+        }
+        else {
+            console.log(localStorage.getItem('activeChannel'));
+            updateChannels(localStorage.getItem('activeChannel'), null);
+            channelChange(); /* PROBLEM HERE */
+        }
     }
-
-    // Update channels
-    updateChannels();
-
-    // ASIDE: Display username
-    document.querySelector('#username').innerHTML = `Hello, <b>${username}</b>!`;
     
     // By default chat submit button is disabled
     document.querySelector('#chatButton').disabled = true;
@@ -38,62 +44,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // ASIDE: On Submit add channel
-    document.querySelector('#channelForm').onsubmit = () => {
-        const newChannel = document.querySelector('#channelFormText').value;
-        updateChannels(null, newChannel);
-        document.querySelector('#channelFormText').value = '';
-    };
+    var textbox = document.getElementById('chatTextArea');
+    textbox.onkeypress = handleChatKeyPress;
 
     // Connect to websocket
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
     
     // When connected, configure buttons
     socket.on('connect', () => {
-        // Each button should emit a "chat" event
+        // When chat button clicked
         document.querySelector('#chatButton').onclick = () => {
+            const timestamp = Date.now();
             const chat = document.querySelector('#chatTextArea').value;
             const elem = document.getElementById('channels');
             const activeChannel = elem.options[elem.selectedIndex].value;
-            socket.emit('submit chat', {'username': username, 'activeChannel': activeChannel, 'chat': chat});
+            socket.emit('submit chat', {'username': username, 'activeChannel': activeChannel, 'chat': chat, 'timestamp': timestamp});
             document.querySelector('#chatTextArea').value = '';
             return false;
         };
 
-        document.querySelector('#channelFormButton').onclick = () => {
+        document.querySelector('#channelForm').onsubmit = () => {
             const newChannel = document.querySelector('#channelFormText').value;
+            document.querySelector('#channelFormText').value = '';
             socket.emit('submit new channel', {'newChannel': newChannel});
+            return false;
         };
     });
 
-    // When a new vote is announced, add to the unordered list
+    // When a new message is sent
     socket.on('announce chat', data => {
         if(document.querySelector('#channels').value == data.activeChannel) {
-            const p = document.createElement('p');
+            const p1 = document.createElement('p');
+            const p2 = document.createElement('p');
             if (data.username == username) {
-                p.innerHTML = `${data.chat}`;
-                p.className = 'myMessage';
+                p1.innerHTML = `${data.timestamp}`;
+                p2.innerHTML = `${data.chat}`;
+                p1.className = 'myMessageTime';
+                p2.className = 'myMessage';
             }
             else {
-                p.innerHTML = `[${data.username}] ${data.chat}`;
-                p.className = 'otherMessage';
+                p1.innerHTML = `<b>${data.username}</b> on ${data.timestamp}`;
+                p2.innerHTML = `${data.chat}`;
+                p1.className = 'otherMessageTime';
+                p2.className = 'otherMessage';
             }
-            document.querySelector('#main').append(p);
+            document.querySelector('#main').append(p1);
+            document.querySelector('#main').append(p2);
         };
     });
 
-    socket.on('announce channel', () => {
-        var active = document.querySelector('#channels').value;
-        updateChannels(active);
+    socket.on('announce channel', data => {
+        if (data.success === true) {
+            updateChannels(data.newChannel);
+            document.querySelector('#channelMessage').innerHTML = data.message;
+        }
+        else {
+            document.querySelector('#channelMessage').innerHTML = data.message;
+        }
     });
 
     document.querySelector('#channels').onchange = () => {
-        channelChange();
+        channelChange(document.querySelector('#channels').value);
+        return false;
     }
 
     document.querySelector('#signout').onclick = () => {
         signout();
+        return false;
     };
+
+    window.addEventListener("beforeunload", function(e){
+        localStorage.setItem('activeChannel', document.querySelector('#channels').value);
+     }, false);
 
 });
 
@@ -125,7 +147,7 @@ function getUsername() {
 };
 
 
-function updateChannels(activeChannel = null, newChannel = null) {
+function updateChannels(activeChannel = null) {
     const request = new XMLHttpRequest();
     request.open('POST', '/updateChannels');
 
@@ -140,11 +162,13 @@ function updateChannels(activeChannel = null, newChannel = null) {
 
         // Create default 'select channel' item
         var def = document.createElement('option');
-        def.value = 'default';
+        def.value = 'Select channel...';
         def.innerHTML = 'Select channel...';
-        if (activeChannel == null) {
+        /*
+        if (activeChannel == null && newChannel == null) {
             def.setAttribute('selected', true);
         };
+        */
         document.querySelector('#channels').append(def);
 
         // If server request successful
@@ -156,7 +180,7 @@ function updateChannels(activeChannel = null, newChannel = null) {
                 var option = document.createElement('option');
                 option.value = c;
                 option.innerHTML = c;
-                if (activeChannel == option.value) {
+                if (activeChannel == c) {
                     option.setAttribute('selected', true);
                 };
                 document.querySelector('#channels').append(option);
@@ -171,23 +195,16 @@ function updateChannels(activeChannel = null, newChannel = null) {
         document.querySelector('#main').innerHTML = "Choose channel to begin chatting";
     };
 
-    // If newChannel needs to be added, add data to send with request
-    const data = new FormData();
-    data.append('newChannel', newChannel);
+    request.send();
 
-    // Send request
-    request.send(data);
-    
     // Stop page reloading
     return false;
 };
 
 
-function channelChange() {
-    // Get channel name
-    channel = document.querySelector('#channels').value;
-
-    // Clear chat window
+function channelChange(channel) {
+    
+    // Clear existing window
     document.querySelector('#main').innerHTML = '';
 
     // Contact server and get latest chat data
@@ -206,16 +223,22 @@ function channelChange() {
             console.log(chatHistory);
 
             for(var i = 0 ; i < chatHistory.length ; i++) {
-                var p = document.createElement('p');
+                const p1 = document.createElement('p');
+                const p2 = document.createElement('p');
                 if (chatHistory[i].username == username) {
-                    p.innerHTML = chatHistory[i].chat;
-                    p.className = 'myMessage';
+                    p1.innerHTML = `${chatHistory[i].timestamp}`;
+                    p2.innerHTML = chatHistory[i].chat;
+                    p1.className = 'myMessageTime';
+                    p2.className = 'myMessage';
                 }
                 else {
-                    p.innerHTML = `[${chatHistory[i].username}] ${chatHistory[i].chat}`;
-                    p.className = 'otherMessage';
+                    p1.innerHTML = `<b>${chatHistory[i].username}</b> on ${chatHistory[i].timestamp}`;
+                    p2.innerHTML = chatHistory[i].chat;
+                    p1.className = 'otherMessageTime';
+                    p2.className = 'otherMessage';
                 }
-                document.querySelector('#main').append(p);
+                document.querySelector('#main').append(p1);
+                document.querySelector('#main').append(p2);
             }
         }
         else {
@@ -236,9 +259,17 @@ function channelChange() {
 };
 
 
+function handleChatKeyPress(e) {
+    var button = document.getElementById('chatButton');
+    if (e.keyCode === 13) {
+        button.click();
+        return false;
+    }
+}
+
+
 function signout() {
     localStorage.clear('username');
     request.open('GET', '/');
-    // Send request
     request.send();
 };

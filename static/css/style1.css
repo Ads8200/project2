@@ -1,4 +1,3 @@
-/* BODY STYLE*/
 body {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
@@ -12,7 +11,7 @@ body {
   display: grid;
   grid-template-columns: 160px 1fr;
   grid-template-rows: 70px 1fr 120px;
-  gap: 1rem;
+  gap: 0.5rem;
   grid-template-areas: 
       'header header'
       'sidebar main'
@@ -25,9 +24,9 @@ body {
   text-decoration: none;
 
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 1fr;
   grid-template-areas: 
-    'logo signout';
+    'logo';
   align-content: center;
 }
 
@@ -35,19 +34,19 @@ body {
   grid-area: sidebar;
   align-items: center;
   padding: 0.8em;
-  border-right: 1px solid lightgray;
   background-color: lightskyblue;
 }
 
 #main {
   grid-area: main;
   overflow-y: scroll;
+  padding: 0.8em;
 }
 
 #chatContainer {
   grid-area: chat;
   border-top: 1px solid lightgray;
-  padding: 10px 0px;
+  padding: 0.8em;
   align-self: center;
 }
 
@@ -65,8 +64,8 @@ body {
   height: 100%;
 }
 
-#signoutWrapper {
-  grid-area: signout;
+#signout {
+  font-size: 0.8em;
   text-decoration: none;
 }
 
@@ -74,15 +73,33 @@ body {
   height: 100px;
 }
 
+#channelFormText {
+  margin-bottom: 5px;
+  border-radius: 0.3em;
+}
+
 #sidebarUserWrapper {
-  height: 30px;
+  height: 60px;
+  border-bottom: 1px solid white;
+}
+
+#channelAddWrapper {
+  height: 120px;
+  border-bottom: 1px solid white;
+}
+
+#chatTextArea {
+  border-radius: 0.5em;
+  border-color: rgb(187, 187, 187);
+  background-color: rgb(224, 246, 255);
 }
 
 .myMessage {
   background-color: mediumaquamarine;
   width: 400px;
   border-radius: 1em;
-  padding: 0.5em 1em;
+  padding: 0.1em 1em 0.5em 1em;
+  margin-top: 0.2em;
 }
 
 .otherMessage {
@@ -90,5 +107,23 @@ body {
   width: 400px;
   margin-left: 200px;
   border-radius: 1em;
-  padding: 0.5em 1em;
+  padding: 0.1em 1em 0.5em 1em;
+  margin-top: 0.2em;
+}
+
+.myMessageTime {
+  font-size: 0.6em;
+  width: 400px;
+  padding: 0.5em 1em 0 1em;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.otherMessageTime {
+  font-size: 0.6em;
+  width: 400px;
+  margin-left: 200px;
+  padding: 0.5em 1em 0 1em;
+  margin-top: 0;
+  margin-bottom: 0;
 }
