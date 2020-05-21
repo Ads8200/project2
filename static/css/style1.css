@@ -37,9 +37,14 @@ body {
   background-color: lightskyblue;
 }
 
-#main {
+main {
   grid-area: main;
+  overflow: hidden;
   overflow-y: scroll;
+  max-width: 500px;
+}
+
+#main {
   padding: 0.8em;
 }
 
@@ -48,10 +53,6 @@ body {
   border-top: 1px solid lightgray;
   padding: 0.8em;
   align-self: center;
-}
-
-#main {
-  overflow-y: scroll;
 }
 
 #logoWrapper {
@@ -76,6 +77,12 @@ body {
 #channelFormText {
   margin-bottom: 5px;
   border-radius: 0.3em;
+}
+
+#channelMessage {
+  font-size: 0.8em;
+  color: red;
+  font-weight: bold;
 }
 
 #sidebarUserWrapper {

@@ -25,23 +25,6 @@ def updateChannels():
     else:
         return jsonify({'success': False, 'message': 'No active channels'})
 
-#    
-#    newChannel = request.form.get("newChannel")
-#
-#    if newChannel == None or newChannel == 'null':
-#        if len(channels) > 0:
-#            return jsonify({'success': True, 'channelAdded': False, 'message': 'success', 'channels': channels})
-#        else:
-#            return jsonify({'success': False, 'channelAdded': False, 'message': 'No active channels'})
-#    else:   
-#        # If new channel exists, return existing list of channels and error message
-#        if newChannel in channels.keys():
-#            return jsonify({'success': True, 'channelAdded': False, 'message': 'Channel already exists', 'channels': channels})
-#        else:
-#            # Initialise a new list item for new channel
-#            channels[newChannel] = []
-#            return jsonify({'success': True, 'channelAdded': True, 'message': 'success', 'channels': channels})
-
 
 @app.route("/dataUpdate", methods=["POST"])
 def dataUpdate():
@@ -50,6 +33,14 @@ def dataUpdate():
         return jsonify({'success': True, 'message': 'success', 'chatHistory': channels[channel]})
     else:
         return jsonify({'success': False, 'message': 'Error obtaining chat history'})
+
+
+@app.route("/update", methods=['POST'])
+def update():
+    if len(channels) > 0:
+        return jsonify({'success': True, 'message': 'success', 'channels': channels})
+    else:
+        return jsonify({'success': False, 'message': 'No active channels'})
 
 
 @socketio.on("submit chat")
@@ -70,12 +61,13 @@ def chat(data):
 @socketio.on("submit new channel")
 def submitNewChannel(data):
     newChannel = data['newChannel']
+    username = data['username']
 
     if newChannel == None or newChannel == 'null':
-        emit("announce channel", {"newChannel": newChannel, "success": False, "message": 'Channel name cannot be null'}, broadcast=True)
+        emit("announce channel", {"newChannel": newChannel, "success": False, "username": username, "message": 'Channel name cannot be null'}, broadcast=True)
     elif newChannel in channels.keys():
-        emit("announce channel", {"newChannel": newChannel, "success": False, "message": 'Channel already exists'}, broadcast=True)
+        emit("announce channel", {"newChannel": newChannel, "success": False, "username": username, "message": 'Channel already exists'}, broadcast=True)
     else:
         # Initialise a new list item for new channel
         channels[newChannel] = []
-        emit("announce channel", {"newChannel": newChannel, "success": True, "message": 'Channel added'}, broadcast=True)
+        emit("announce channel", {"newChannel": newChannel, "success": True, "username": username, "message": 'Channel added'}, broadcast=True)

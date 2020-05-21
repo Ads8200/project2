@@ -1,6 +1,10 @@
 // KNOWN BUGS:
 // - Username not validated.  Another user could already have the name
 
+// GLOBAL VARIABLES
+var SERVER_DATA;
+var DELAY = 200;
+
 document.addEventListener('DOMContentLoaded', () => {
     
     // Check if user has visited site before and provided a username
@@ -8,23 +12,27 @@ document.addEventListener('DOMContentLoaded', () => {
         username = getUsername();
         localStorage.setItem('username', username);
         document.querySelector('#username').innerHTML = `Hello, <b>${username}</b>!`;
-        updateChannels();
+        getServerUpdate(); // Updates SERVER_DATA global variable
+        setTimeout(() => { refreshChannels(); }, DELAY);
     }
     else {
         username = localStorage.getItem('username');
         document.querySelector('#username').innerHTML = `Hello, <b>${username}</b>!`;
-        if (!localStorage.getItem('activeChannel') || localStorage.getItem('activeChannel') == 'Select channel...'){
+        if (!localStorage.getItem('activeChannel') || localStorage.getItem('activeChannel') == 'Select channel...') {
             console.log('No active channel in local storage');
-            updateChannels();
+            getServerUpdate() // Updates SERVER_DATA global variable
+            setTimeout(() => { refreshChannels(); }, DELAY);
         }
         else {
             console.log(localStorage.getItem('activeChannel'));
-            updateChannels(localStorage.getItem('activeChannel'), null);
-            channelChange(); /* PROBLEM HERE */
+            getServerUpdate() // Updates SERVER_DATA global variable
+            console.log(SERVER_DATA);
+            setTimeout(() => { refreshChannels(localStorage.getItem('activeChannel')); }, DELAY);
+            setTimeout(() => { updateChat(); }, DELAY+10);
         }
     }
     
-    // By default chat submit button is disabled
+    // By default chat submit and channel form buttons are disabled
     document.querySelector('#chatButton').disabled = true;
     document.querySelector('#channelFormButton').disabled = true;
 
@@ -44,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // 'Enter' key submits message
     var textbox = document.getElementById('chatTextArea');
     textbox.onkeypress = handleChatKeyPress;
 
@@ -66,12 +75,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#channelForm').onsubmit = () => {
             const newChannel = document.querySelector('#channelFormText').value;
             document.querySelector('#channelFormText').value = '';
-            socket.emit('submit new channel', {'newChannel': newChannel});
+            socket.emit('submit new channel', {'newChannel': newChannel, 'username': username});
             return false;
         };
     });
 
-    // When a new message is sent
+    // When a new message is broadcast by server
     socket.on('announce chat', data => {
         if(document.querySelector('#channels').value == data.activeChannel) {
             const p1 = document.createElement('p');
@@ -94,17 +103,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('announce channel', data => {
-        if (data.success === true) {
-            updateChannels(data.newChannel);
-            document.querySelector('#channelMessage').innerHTML = data.message;
+        if (data.success) {
+            getServerUpdate() // Updates SERVER_DATA global variable
+            // For user who created new channel, switch to that channel
+            if (data.username == username) {
+                setTimeout(() => { refreshChannels(data.newChannel); }, DELAY);
+                document.querySelector('#channelMessage').innerHTML = `${data.newChannel} channel added.`;
+                setTimeout(() => { document.querySelector('#channelMessage').innerHTML = "" }, 3000);
+            }
+            // For all other users remain on current channel, but update list
+            else {
+                setTimeout(() => { refreshChannels(document.querySelector('#channels').value); }, DELAY);
+                document.querySelector('#channelMessage').innerHTML = `${data.username} added ${data.newChannel} channel.`;
+                setTimeout(() => { document.querySelector('#channelMessage').innerHTML = "" }, 3000);
+            }
         }
-        else {
+        else if (!data.success && data.username == username) {
             document.querySelector('#channelMessage').innerHTML = data.message;
         }
     });
 
     document.querySelector('#channels').onchange = () => {
-        channelChange(document.querySelector('#channels').value);
+        getServerUpdate(); // Updates SERVER_DATA global variable
+        setTimeout(() => { refreshChannels(document.querySelector('#channels').value); }, DELAY);
+        setTimeout(() => { updateChat(); }, DELAY+10);
         return false;
     }
 
@@ -116,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener("beforeunload", function(e){
         localStorage.setItem('activeChannel', document.querySelector('#channels').value);
      }, false);
-
 });
 
 
@@ -147,115 +168,84 @@ function getUsername() {
 };
 
 
-function updateChannels(activeChannel = null) {
+function getServerUpdate() {
     const request = new XMLHttpRequest();
-    request.open('POST', '/updateChannels');
-
-    // Callback function for when request completes
-    request.onload = () => {
-        
-        // Extract JSON data from request
-        const data = JSON.parse(request.responseText);
-
-        // Empty channel select drop down box
-        document.querySelector('#channels').innerHTML = '';
-
-        // Create default 'select channel' item
-        var def = document.createElement('option');
-        def.value = 'Select channel...';
-        def.innerHTML = 'Select channel...';
-        /*
-        if (activeChannel == null && newChannel == null) {
-            def.setAttribute('selected', true);
-        };
-        */
-        document.querySelector('#channels').append(def);
-
-        // If server request successful
-        if (data.success) {
-
-            channels = data.channels;
-
-            for (c in channels) {
-                var option = document.createElement('option');
-                option.value = c;
-                option.innerHTML = c;
-                if (activeChannel == c) {
-                    option.setAttribute('selected', true);
-                };
-                document.querySelector('#channels').append(option);
-            }
-        }
-        else {
-            // Update HTML with failure message
-            document.querySelector('#channelMessage').innerHTML = data.message;
-        }
-
-        // Empty chat window
-        document.querySelector('#main').innerHTML = "Choose channel to begin chatting";
-    };
-
+    request.open('POST', '/update');
     request.send();
 
-    // Stop page reloading
+    request.onload = () => {
+        SERVER_DATA = JSON.parse(request.responseText);
+        console.log(SERVER_DATA);
+        console.log(SERVER_DATA.success);
+        return false;
+    }
+    
+};
+
+function refreshChannels(activeChannel = null) {
+    
+    // Empty channel select drop down box
+    document.querySelector('#channels').innerHTML = '';
+
+    // Create default 'select channel' item
+    var def = document.createElement('option');
+    def.value = 'Select channel...';
+    def.innerHTML = 'Select channel...';
+    document.querySelector('#channels').append(def);
+
+    if (SERVER_DATA.success == true){
+        channelsData = SERVER_DATA.channels;
+        for (c in channelsData) {
+            var option = document.createElement('option');
+            option.value = c;
+            option.innerHTML = c;
+            if (activeChannel !== null && c == activeChannel) {
+                option.setAttribute('selected', true);
+            };
+            document.querySelector('#channels').append(option);
+        }    
+    }
     return false;
 };
 
+function updateChat() {
+    // Get active channel name
+    channel = document.querySelector('#channels').value;
 
-function channelChange(channel) {
-    
-    // Clear existing window
+    // Empty chat window
     document.querySelector('#main').innerHTML = '';
 
-    // Contact server and get latest chat data
-    const request = new XMLHttpRequest();
-    request.open('POST', '/dataUpdate');
-    
-    // Callback function for when request completes
-    request.onload = () => {
+    if (SERVER_DATA.success) {
         
-        // Extract JSON data from request
-        const data = JSON.parse(request.responseText);
+        // Filter on active channel name
+        chatHistory = SERVER_DATA.channels[channel];
 
-        if (data.success) {
+        //chatHistory = data.chatHistory;
+        console.log(chatHistory);
 
-            chatHistory = data.chatHistory;
-            console.log(chatHistory);
-
-            for(var i = 0 ; i < chatHistory.length ; i++) {
-                const p1 = document.createElement('p');
-                const p2 = document.createElement('p');
-                if (chatHistory[i].username == username) {
-                    p1.innerHTML = `${chatHistory[i].timestamp}`;
-                    p2.innerHTML = chatHistory[i].chat;
-                    p1.className = 'myMessageTime';
-                    p2.className = 'myMessage';
-                }
-                else {
-                    p1.innerHTML = `<b>${chatHistory[i].username}</b> on ${chatHistory[i].timestamp}`;
-                    p2.innerHTML = chatHistory[i].chat;
-                    p1.className = 'otherMessageTime';
-                    p2.className = 'otherMessage';
-                }
-                document.querySelector('#main').append(p1);
-                document.querySelector('#main').append(p2);
+        for(var i = 0 ; i < chatHistory.length ; i++) {
+            const p1 = document.createElement('p');
+            const p2 = document.createElement('p');
+            if (chatHistory[i].username == username) {
+                p1.innerHTML = `${chatHistory[i].timestamp}`;
+                p2.innerHTML = chatHistory[i].chat;
+                p1.className = 'myMessageTime';
+                p2.className = 'myMessage';
             }
+            else {
+                p1.innerHTML = `<b>${chatHistory[i].username}</b> on ${chatHistory[i].timestamp}`;
+                p2.innerHTML = chatHistory[i].chat;
+                p1.className = 'otherMessageTime';
+                p2.className = 'otherMessage';
+            }
+            document.querySelector('#main').append(p1);
+            document.querySelector('#main').append(p2);
         }
-        else {
-            // Update HTML with failure message
-            document.querySelector('#main').innerHTML = data.message;
-        }
-    };
-
-    // Add data to send with request
-    const data = new FormData();
-    data.append('channel', channel);
-
-    // Send request
-    request.send(data);
-
-    // Stop page reloading
-    return false;
+    }
+    else {
+        // Update HTML with failure message
+        document.querySelector('#main').innerHTML = data.message;
+    }
 };
 
 
@@ -270,6 +260,8 @@ function handleChatKeyPress(e) {
 
 function signout() {
     localStorage.clear('username');
+    localStorage.clear('activeChannel');
+
     request.open('GET', '/');
     request.send();
 };
