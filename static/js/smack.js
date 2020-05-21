@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // For user who created new channel, switch to that channel
             if (data.username == username) {
                 setTimeout(() => { refreshChannels(data.newChannel); }, DELAY);
+                setTimeout(() => { updateChat(); }, DELAY+10);
                 document.querySelector('#channelMessage').innerHTML = `${data.newChannel} channel added.`;
                 setTimeout(() => { document.querySelector('#channelMessage').innerHTML = "" }, 3000);
             }
