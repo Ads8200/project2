@@ -18,23 +18,6 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/updateChannels", methods=["POST"])
-def updateChannels():
-    if len(channels) > 0:
-        return jsonify({'success': True, 'message': 'success', 'channels': channels})
-    else:
-        return jsonify({'success': False, 'message': 'No active channels'})
-
-
-@app.route("/dataUpdate", methods=["POST"])
-def dataUpdate():
-    channel = request.form.get("channel")
-    if channel in channels.keys():
-        return jsonify({'success': True, 'message': 'success', 'chatHistory': channels[channel]})
-    else:
-        return jsonify({'success': False, 'message': 'Error obtaining chat history'})
-
-
 @app.route("/update", methods=['POST'])
 def update():
     if len(channels) > 0:

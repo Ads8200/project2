@@ -1,6 +1,3 @@
-// KNOWN BUGS:
-// - Username not validated.  Another user could already have the name
-
 // GLOBAL VARIABLES
 var SERVER_DATA;
 var DELAY = 200;
@@ -128,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { refreshChannels(document.querySelector('#channels').value); }, DELAY);
         setTimeout(() => { updateChat(); }, DELAY+10);
         return false;
-    }
+    };
 
     document.querySelector('#signout').onclick = () => {
         signout();
@@ -208,6 +205,7 @@ function refreshChannels(activeChannel = null) {
     return false;
 };
 
+
 function updateChat() {
     // Get active channel name
     channel = document.querySelector('#channels').value;
@@ -248,16 +246,16 @@ function updateChat() {
     }
 };
 
-
+// Return key submits chat
 function handleChatKeyPress(e) {
     var button = document.getElementById('chatButton');
     if (e.keyCode === 13) {
         button.click();
         return false;
     }
-}
+};
 
-
+// Signout
 function signout() {
     localStorage.clear('username');
     localStorage.clear('activeChannel');
